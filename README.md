@@ -94,7 +94,7 @@ Clone o repositório e execute:
 docker compose up -d --build
 
 Depois acesse o:
-http://localhost:8000
+http://localhost:8010
 
 
 # Roadmap futuro
