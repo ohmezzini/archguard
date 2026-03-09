@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="120" viewBox="0 0 520 120">
+  <rect width="520" height="120" fill="none"/>
+  <g transform="translate(10,15)">
+    <path d="M50 0 L90 15 L90 55 C90 80 70 95 50 100 C30 95 10 80 10 55 L10 15 Z" fill="#2b7fff"/>
+    <path d="M50 18 L74 27 L74 53 C74 67 63 78 50 82 C37 78 26 67 26 53 L26 27 Z" fill="#0b1220"/>
+  </g>
+  <text x="120" y="60" font-family="Segoe UI, Arial, sans-serif" font-size="44" fill="#e6edf7" font-weight="700">ArchGuard</text>
+  <text x="120" y="90" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#9fb2d6">Security Architecture Intelligence</text>
+</svg>

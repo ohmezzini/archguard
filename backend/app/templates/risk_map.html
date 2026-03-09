@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • Risk Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/"><img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="navlinks">
+        <a href="/">Dashboard</a>
+        <a href="/scorecard">Scorecard</a>
+        <a href="/risk-map"><b>Risk Map</b></a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <h2>Architecture Risk Map</h2>
+        <div class="small">Criticality × Exposure (última avaliação por serviço)</div>
+      </div>
+      <canvas id="riskmap" height="140"></canvas>
+      <div class="small" style="margin-top:10px">
+        Priorize o quadrante <b>High × Public</b> e farol <b>RED</b>.
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  const payload = {{ payload | tojson }};
+  const points = payload.points;
+  const exposureLabels = payload.exposure_labels;
+  const criticalityLabels = payload.criticality_labels;
+
+  function colorFor(t){
+    if(t==='Baixo') return 'rgba(47,227,154,.9)';
+    if(t==='Médio') return 'rgba(255,214,110,.9)';
+    if(t==='Alto') return 'rgba(255,93,115,.9)';
+    return 'rgba(159,178,214,.7)';
+  }
+
+  new Chart(document.getElementById('riskmap'), {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        data: points.map(p => ({x: p.x, y: p.y, r: p.r, name: p.name, traffic: p.traffic})),
+        backgroundColor: points.map(p => colorFor(p.traffic)),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.raw;
+              const exp = exposureLabels[Math.round(v.x)] || v.x;
+              const crit = criticalityLabels[Math.round(v.y)] || v.y;
+              return `${v.name} • ${v.traffic} • ${crit} × ${exp}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          min: -0.5, max: exposureLabels.length - 0.5,
+          ticks: { callback: (v) => exposureLabels[v] ?? v },
+          title: { display: true, text: 'Exposure' }
+        },
+        y: {
+          min: -0.5, max: criticalityLabels.length - 0.5,
+          ticks: { callback: (v) => criticalityLabels[v] ?? v },
+          title: { display: true, text: 'Criticality' }
+        }
+      }
+    }
+  });
+</script>
+
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+</body>
+</html>

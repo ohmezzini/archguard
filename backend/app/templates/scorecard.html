@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • Scorecard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/"><img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="navlinks">
+        <a href="/">Dashboard</a>
+        <a href="/scorecard"><b>Scorecard</b></a>
+        <a href="/risk-map">Risk Map</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="section-title">
+          <h2>Security Posture Scorecard</h2>
+          <div class="small">Média por domínio (última avaliação por serviço)</div>
+        </div>
+
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Domínio</th><th>Score</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td><b>{{r.label}}</b><div class="small">{{r.desc}}</div></td>
+                <td>{{r.score}}</td>
+                <td>
+                  <span class="badge {{r.traffic}}">
+                    <span class="dot"></span>{{r.traffic}}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="small" style="margin-top:10px">
+          O score é um indicador de postura (shift-left). Use para priorização e governança, não como auditoria final.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Radar</h2>
+          <div class="small">Visão executiva</div>
+        </div>
+        <canvas id="radar" height="170"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  const data = {{ radar | tojson }};
+  new Chart(document.getElementById('radar'), {
+    type: 'radar',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Posture',
+        data: data.values,
+        borderWidth: 2,
+        pointRadius: 3,
+        fill: true,
+        backgroundColor: 'rgba(77,163,255,.12)',
+        borderColor: 'rgba(77,163,255,.85)',
+        pointBackgroundColor: 'rgba(77,163,255,.95)'
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: { r: { beginAtZero: true, suggestedMax: 100, ticks: { stepSize: 20 } } }
+    }
+  });
+</script>
+
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • Interview Wizard AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/">
+        <img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="navlinks">
+        <a href="/">Dashboard</a>
+        <a href="/scorecard">Scorecard</a>
+        <a href="/risk-map">Risk Map</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h1>Interview Wizard • {{service.name}}</h1>
+      <div class="sub">{{service.platform}} • {{service.environment}} • {{service.criticality}} • {{service.exposure}}</div>
+    </div>
+
+    <div class="wizard-wrap">
+      <div class="wizard-steps">
+        {% for s in steps %}
+          <div class="wizard-step {% if s.index < step %}done{% elif s.index == step %}active{% endif %}">{{s.index + 1}}. {{s.short}}</div>
+        {% endfor %}
+      </div>
+
+      <div class="wizard-grid">
+        <div class="card">
+          <div class="section-title">
+            <h2>{{current.title}}</h2>
+            <div class="small">Etapa {{step + 1}} de {{steps|length}}</div>
+          </div>
+
+          <div class="small" style="margin-top:10px">{{current.description}}</div>
+
+          {% if current.mitre and current.mitre|length > 0 %}
+            <div style="margin-top:10px">
+              <div class="small"><b>Contexto MITRE (base)</b></div>
+              {% for m in current.mitre %}
+                <span class="mitre-badge">{{m}}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <form method="post" action="/service/{{sid}}/interview/next" style="margin-top:14px">
+            <input type="hidden" name="step" value="{{step}}">
+
+            {% if current.type == 'radio' %}
+              <div class="option-list">
+                {% for opt in current.options %}
+                  <label class="radio-card">
+                    <input type="radio" name="answer" value="{{opt.value}}" {% if current_answer == opt.value %}checked{% endif %} requiAlto>
+                    <span class="option-content">
+                      <b>{{opt.label}}</b>
+                      {% if opt.hint %}<span class="small">{{opt.hint}}</span>{% endif %}
+                    </span>
+                  </label>
+                {% endfor %}
+              </div>
+
+            {% elif current.type == 'check' %}
+              <div class="option-list">
+                {% for opt in current.options %}
+                  <label class="radio-card">
+                    <input type="checkbox" name="answer_multi" value="{{opt.value}}" {% if current_answer_multi and opt.value in current_answer_multi %}checked{% endif %}>
+                    <span class="option-content">
+                      <b>{{opt.label}}</b>
+                      {% if opt.hint %}<span class="small">{{opt.hint}}</span>{% endif %}
+                    </span>
+                  </label>
+                {% endfor %}
+              </div>
+
+            {% elif current.type == 'text' %}
+              <textarea name="answer_text" rows="5" placeholder="{{current.placeholder or ''}}">{{current_answer_text or ''}}</textarea>
+            {% endif %}
+
+            <div class="wizard-nav">
+              <div>
+                {% if step > 0 %}
+                  <a href="/service/{{sid}}/interview?step={{step-1}}"><button type="button" class="btn-ghost">← Voltar</button></a>
+                {% endif %}
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap">
+                <a href="/service/{{sid}}"><button type="button" class="btn-ghost">Cancelar</button></a>
+                {% if step < (steps|length - 1) %}
+                  <button type="submit">Salvar e continuar →</button>
+                {% else %}
+                  <button type="submit">Finalizar entrevista e avaliar</button>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Copiloto de IA</h2>
+            <div class="small">{% if ai_enabled %}OpenAI ativo{% else %}Modo fallback{% endif %}</div>
+          </div>
+
+          {% if ai_hint %}
+            <div class="small" style="margin-top:10px"><b>Pergunta adaptativa</b></div>
+            <div style="margin-top:8px"><b>{{ai_hint.question}}</b></div>
+
+            <div class="small" style="margin-top:12px"><b>Por que isso importa</b></div>
+            <div class="small" style="margin-top:6px">{{ai_hint.why}}</div>
+
+            {% if ai_hint.mitre and ai_hint.mitre|length > 0 %}
+              <div class="small" style="margin-top:12px"><b>MITRE relevante</b></div>
+              <div style="margin-top:6px">
+                {% for m in ai_hint.mitre %}
+                  <span class="mitre-badge">{{m}}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if ai_hint.recommendation %}
+              <div class="small" style="margin-top:12px"><b>Recomendação</b></div>
+              <div class="small" style="margin-top:6px">{{ai_hint.recommendation}}</div>
+            {% endif %}
+          {% endif %}
+
+          {% if preview %}
+            <div class="small" style="margin-top:16px"><b>Preview do blueprint parcial</b></div>
+            <pre class="codebox" style="margin-top:10px"><code>{{preview | tojson(indent=2)}}</code></pre>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+</body>
+</html>

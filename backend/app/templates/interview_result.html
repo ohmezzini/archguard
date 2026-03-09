@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • Resultado da entrevista</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/">
+        <img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="navlinks">
+        <a href="/">Dashboard</a>
+        <a href="/scorecard">Scorecard</a>
+        <a href="/risk-map">Risk Map</a>
+      </div>
+    </div>
+
+    <div class="result-hero">
+      <h1>Resultado da entrevista • {{service.name}}</h1>
+      <div class="sub">{{service.platform}} • {{service.environment}} • {{service.criticality}} • {{service.exposure}}</div>
+    </div>
+
+    <div class="compare-grid">
+      <div class="card">
+        <div class="section-title">
+          <h2>Farol</h2>
+          <div class="small">Antes → Depois</div>
+        </div>
+        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px">
+          <span class="badge {{ before.traffic if before else 'Desconhecido' }}"><span class="dot"></span>{{ before.traffic if before else 'none' }}</span>
+          <span class="arrow-chip">→</span>
+          {% if after.traffic == 'red' %}
+          <span class="badge red"><span class="dot"></span>Alto</span>
+        {% elif after.traffic == 'yellow' %}
+          <span class="badge yellow"><span class="dot"></span>Médio</span>
+        {% elif after.traffic == 'green' %}
+          <span class="badge green"><span class="dot"></span>Baixo</span>
+        {% else %}
+          <span class="badge unknown"><span class="dot"></span>Desconhecido</span>
+        {% endif %}
+        </div>
+
+        <div style="margin-top:16px">
+          <div class="metric-row">
+            <span class="small">Overall</span>
+            <span><b>{{ before.overall if before else '—' }}</b> → <b>{{ after.overall }}</b></span>
+          </div>
+          {% for row in rows %}
+          <div class="metric-row">
+            <span class="small">{{ row.label }}</span>
+            <span><b>{{ row.before }}</b> → <b>{{ row.after }}</b></span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Resumo</h2>
+          <div class="small">Impacto da entrevista</div>
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          {% if delta_overall > 0 %}
+            A entrevista melhorou o posture score em <b>{{ delta_overall }}</b> pontos.
+          {% elif delta_overall < 0 %}
+            A entrevista revelou riscos que Altouziram o posture score em <b>{{ delta_overall|abs }}</b> pontos.
+          {% else %}
+            O overall permaneceu estável.
+          {% endif %}
+        </div>
+
+        {% if after_blockers and after_blockers|length > 0 %}
+          <div class="small" style="margin-top:14px"><b>Blockers atuais</b></div>
+          <ul class="info-list small" style="margin-top:6px">
+            {% for b in after_blockers[:8] %}
+              <li><b>{{ b.rule_id }}</b> — {{ b.title }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="small" style="margin-top:14px"><b>Sem blockers após a entrevista.</b></div>
+        {% endif %}
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:18px">
+          <a href="/service/{{sid}}"><button type="button">Voltar ao microserviço</button></a>
+          <a href="/"><button type="button" class="btn-ghost">Ir para Dashboard</button></a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+</body>
+</html>

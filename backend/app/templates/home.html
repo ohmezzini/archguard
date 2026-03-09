@@ -1,0 +1,193 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/"><img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="navlinks">
+        <a href="/connectors">Connectors</a>
+        <a href="/new"><b>+ Novo microserviço</b></a>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Serviços</div>
+        <div class="value">{{kpis.services_total}}</div>
+        <div class="hint">Total cadastrados</div>
+      </div>
+      <div class="kpi">
+        <div class="label">ALTO</div>
+        <div class="value">{{kpis.red}}</div>
+        <div class="hint">Risco alto / blockers</div>
+      </div>
+      <div class="kpi">
+        <div class="label">MÉDIO</div>
+        <div class="value">{{kpis.yellow}}</div>
+        <div class="hint">Gaps a tratar</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Média (overall)</div>
+        <div class="value">{% if kpis.avg_overall is not none %}{{kpis.avg_overall}}{% else %}—{% endif %}</div>
+        <div class="hint">Aderência média</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="section-title">
+          <h2>Farol geral</h2>
+          <div class="small">Baixo / Médio / Alto</div>
+        </div>
+        <canvas id="trafficChart" height="140"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Farol por ambiente</h2>
+          <div class="small">dev / hml / prod</div>
+        </div>
+        <canvas id="envChart" height="140"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="section-title">
+        <h2>Farol por plataforma</h2>
+        <div class="small">EKS vs ECS</div>
+      </div>
+      <canvas id="platformChart" height="90"></canvas>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="section-title">
+        <h2>Serviços</h2>
+        <div class="small">Clique para abrir detalhes</div>
+      </div>
+      <table style="margin-top:10px">
+        <thead>
+          <tr>
+            <th>Serviço</th><th>Owner</th><th>Domínio</th><th>Ambiente</th><th>Plataforma</th><th>Farol</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in services %}
+          <tr>
+            <td><a href="/service/{{s.id}}">{{s.name}}</a></td>
+            <td>{{s.owner_team}}</td>
+            <td>{{s.domain}}</td>
+            <td>{{s.environment}}</td>
+            <td>{{s.platform}}</td>
+            <td>
+              {% if s.traffic == 'red' %}
+                <span class="badge red"><span class="dot"></span>Alto</span>
+              {% elif s.traffic == 'yellow' %}
+                <span class="badge yellow"><span class="dot"></span>Médio</span>
+              {% elif s.traffic == 'green' %}
+                <span class="badge green"><span class="dot"></span>Baixo</span>
+              {% else %}
+                <span class="badge unknown"><span class="dot"></span>Desconhecido</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+          {% if services|length == 0 %}
+          <tr><td colspan="6" class="small">Nenhum serviço cadastrado.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0.1 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+  </div>
+
+<script>
+  const stats = {{ stats | tojson }};
+  const colors = {
+    green: 'rgba(47,227,154,.9)',
+    yellow: 'rgba(255,214,110,.9)',
+    red: 'rgba(255,93,115,.9)',
+    unknown: 'rgba(159,178,214,.7)'
+  };
+
+  function stackedDatasetFromMap(mapObj){
+    const labels = Object.keys(mapObj);
+    const pick = (k) => labels.map(l => (mapObj[l] && mapObj[l][k]) ? mapObj[l][k] : 0);
+    return {
+      labels,
+      datasets: [
+        {label:'Baixo', data: pick('green'), backgroundColor: colors.green},
+        {label:'Médio', data: pick('yellow'), backgroundColor: colors.yellow},
+        {label:'Alto', data: pick('red'), backgroundColor: colors.red},
+        {label:'Desconhecido', data: pick('unknown'), backgroundColor: colors.unknown},
+      ]
+    };
+  }
+
+  new Chart(document.getElementById('trafficChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Baixo','Médio','Alto','Desconhecido'],
+      datasets: [{
+        data: [
+          stats.traffic.green || 0,
+          stats.traffic.yellow || 0,
+          stats.traffic.red || 0,
+          stats.traffic.unknown || 0
+        ],
+        backgroundColor: [colors.green, colors.yellow, colors.red, colors.unknown],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom' } },
+      cutout: '68%'
+    }
+  });
+
+  const env = stackedDatasetFromMap(stats.env || {});
+  new Chart(document.getElementById('envChart'), {
+    type: 'bar',
+    data: env,
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  const plat = stackedDatasetFromMap(stats.platform || {});
+  new Chart(document.getElementById('platformChart'), {
+    type: 'bar',
+    data: plat,
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+</script>
+
+</body>
+</html>

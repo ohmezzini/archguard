@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: pgas
+      POSTGRES_PASSWORD: pgas
+      POSTGRES_DB: pgas
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgas_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pgas -d pgas"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pgas:pgas@db:5432/pgas
+      PGAS_RULESET_PATH: app/rules/mvp-0.1.yaml
+      PGAS_SEED_ON_STARTUP: 'true'
+      PGAS_SEED_FORCE: 'false'
+      ARCHGUARD_AI_MODE: ${ARCHGUARD_AI_MODE:-smart}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8010:8000"
+    restart: unless-stopped
+
+volumes:
+  pgas_pg:

@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • Novo microserviço</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/">
+        <img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="small-nav">
+        <a href="/">Dashboard</a>
+        <a href="/connectors">Connectors</a>
+      </div>
+    </div>
+
+    <div class="form-header">
+      <h1>Novo microserviço</h1>
+      <p class="small">Cadastro mínimo para iniciar avaliação</p>
+    </div>
+
+    <div class="form-container">
+      <div class="card">
+        <form method="post" action="/new">
+          <label class="small">Nome</label>
+          <input name="name" required>
+
+          <label class="small" style="margin-top:12px">Owner Team</label>
+          <input name="owner_team" value="unknown">
+
+          <label class="small" style="margin-top:12px">Domínio</label>
+          <input name="domain" value="unknown">
+
+          <div class="grid" style="margin-top:12px">
+            <div>
+              <label class="small">Ambiente</label>
+              <select name="environment">
+                <option>dev</option>
+                <option>hml</option>
+                <option selected>prod</option>
+              </select>
+            </div>
+            <div>
+              <label class="small">Plataforma</label>
+              <select name="platform">
+                <option selected>EKS</option>
+                <option>ECS</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px">
+            <div>
+              <label class="small">Criticidade</label>
+              <select name="criticality">
+                <option>low</option>
+                <option>medium</option>
+                <option selected>high</option>
+              </select>
+            </div>
+            <div>
+              <label class="small">Exposição</label>
+              <select name="exposure">
+                <option selected>internal</option>
+                <option>partner</option>
+                <option>public</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="small" style="margin-top:12px">Classificação de dados</label>
+          <select name="data_classification">
+            <option>public</option>
+            <option>internal</option>
+            <option selected>confidential</option>
+            <option>restricted</option>
+          </select>
+
+          <div class="form-actions">
+            <button type="submit">Criar</button>
+            <a href="/"><button type="button" class="btn-ghost">Cancelar</button></a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0.1 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+  </div>
+</body>
+</html>

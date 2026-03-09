@@ -1,0 +1,113 @@
+# PGAS Ruleset mvp-0.2 (still named mvp-0.1.yaml for compatibility)
+# Demo-oriented rules referencing common expectations under Brazilian financial sector cyber-risk governance
+# (BCB 85 / CMN 4893) in a practical, posture-based way.
+
+- id: NET-001
+  dimension: network_exposure
+  severity: critical
+  is_blocker: true
+  score_impact: -45
+  title: "Serviço público sem autenticação no ingresso"
+  description: "Exposição pública e 'ingress.auth' == 'none'."
+  recommendation: "Implemente autenticação no ponto de entrada (OIDC/JWT/mTLS) e autorização por escopo/claims."
+  evidence_required: ["service.exposure", "ingress.auth"]
+  condition: "service.exposure == 'public' and bp.ingress.auth == 'none'"
+
+- id: NET-002
+  dimension: network_exposure
+  severity: high
+  is_blocker: false
+  score_impact: -15
+  title: "Egress para internet sem restrição evidenciada"
+  description: "Egress internet = yes e restricted != yes."
+  recommendation: "Restrinja egress (proxy/egress gateway), allowlist por domínios e monitore DNS/HTTP."
+  evidence_required: ["network.egress.internet", "network.egress.restricted", "network.egress.allowed_domains"]
+  condition: "bp.network.egress.internet == 'yes' and bp.network.egress.restricted != 'yes' and service.environment == 'prod'"
+
+- id: IAM-001
+  dimension: identity_access
+  severity: critical
+  is_blocker: true
+  score_impact: -40
+  title: "Workload identity com chaves estáticas"
+  description: "workload_identity == StaticKeys."
+  recommendation: "Use IRSA (EKS) ou TaskRole (ECS). Proíba chaves estáticas em runtime."
+  evidence_required: ["identity.workload_identity"]
+  condition: "bp.identity.workload_identity == 'StaticKeys'"
+
+- id: IAM-002
+  dimension: identity_access
+  severity: high
+  is_blocker: false
+  score_impact: -12
+  title: "Least privilege / RBAC não evidenciados"
+  description: "iam_least_privilege ou rbac = unknown/no em serviços médios/altos."
+  recommendation: "Evidencie policies mínimas, segregação de funções e RBAC no cluster/serviço."
+  evidence_required: ["identity.iam_least_privilege", "identity.rbac"]
+  condition: "(bp.identity.iam_least_privilege in ['no','unknown'] or bp.identity.rbac in ['no','unknown']) and service.criticality in ['medium','high']"
+
+- id: DATA-001
+  dimension: data_privacy
+  severity: critical
+  is_blocker: true
+  score_impact: -40
+  title: "Dados sensíveis sem criptografia at-rest"
+  description: "sensitive==yes e encryption_at_rest in [no,unknown]."
+  recommendation: "Habilitar criptografia at-rest (KMS) e evidenciar chaves/políticas."
+  evidence_required: ["data.sensitive", "data.encryption_at_rest"]
+  condition: "bp.data.sensitive == 'yes' and bp.data.encryption_at_rest in ['no','unknown']"
+
+- id: DATA-002
+  dimension: data_privacy
+  severity: high
+  is_blocker: false
+  score_impact: -12
+  title: "PII em logs sem redaction evidenciada"
+  description: "logs_may_contain_pii==yes e redaction != yes."
+  recommendation: "Implemente redaction/mascara, classificação e controles de logging."
+  evidence_required: ["data.logs_may_contain_pii", "data.redaction"]
+  condition: "bp.data.logs_may_contain_pii == 'yes' and bp.data.redaction != 'yes'"
+
+- id: SC-001
+  dimension: supply_chain
+  severity: high
+  is_blocker: false
+  score_impact: -12
+  title: "Pipeline sem SAST/SCA/Secrets scanning"
+  description: "Gates shift-left não evidenciados em prod."
+  recommendation: "Habilitar SAST, SCA e secrets scan como gate (PR/merge) com exceções governadas."
+  evidence_required: ["cicd.gates.sast", "cicd.gates.sca", "cicd.gates.secrets_scan"]
+  condition: "(bp.cicd.gates.sast in ['no','unknown'] or bp.cicd.gates.sca in ['no','unknown'] or bp.cicd.gates.secrets_scan in ['no','unknown']) and service.environment == 'prod'"
+
+- id: SC-002
+  dimension: supply_chain
+  severity: medium
+  is_blocker: false
+  score_impact: -8
+  title: "Container scan / SBOM / image signing ausentes"
+  description: "Falta evidência de controles de supply chain."
+  recommendation: "Ativar container scan, gerar SBOM e assinar imagens (cosign/notary)."
+  evidence_required: ["supply_chain.container_scan", "supply_chain.sbom", "supply_chain.image_signing"]
+  condition: "bp.supply_chain.container_scan in ['no','unknown'] or bp.supply_chain.sbom in ['no','unknown'] or bp.supply_chain.image_signing in ['no','unknown']"
+
+- id: OBS-001
+  dimension: observability_ir
+  severity: high
+  is_blocker: false
+  score_impact: -15
+  title: "Logging centralizado ausente/desconhecido"
+  description: "Central logging não evidenciado."
+  recommendation: "Habilitar centralização de logs e correlação por request_id/trace_id."
+  evidence_required: ["observability.central_logging"]
+  condition: "bp.observability.central_logging in ['no','unknown'] and service.criticality in ['medium','high']"
+
+- id: OBS-002
+  dimension: observability_ir
+  severity: medium
+  is_blocker: false
+  score_impact: -8
+  title: "Retenção de logs não evidenciada (prod)"
+  description: "Retenção unknown em produção."
+  recommendation: "Definir e evidenciar retenção (ex.: >= 90 dias) conforme criticidade e requisitos internos."
+  evidence_required: ["observability.retention_days"]
+  condition: "service.environment == 'prod' and bp.observability.retention_days == 'unknown'"

@@ -1,0 +1,15 @@
+
+ARCHGUARD CONNECTORS – NEXT IMPLEMENTATION NOTES
+
+Included in this package:
+- Connector foundation tables
+- Connectors screen
+- Mock Security Hub sync endpoint
+- External findings visualization per microservice
+
+Planned next iteration:
+1. Real AWS Security Hub connector
+2. Read-only IAM role authentication
+3. Incremental synchronization by UpdatedAt
+4. DefectDojo connector
+5. Jira remediation connector

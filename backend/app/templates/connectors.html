@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • Connectors</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="app-header">
+      <a class="app-brand" href="/">
+        <img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="navlinks">
+        <a href="/">Dashboard</a>
+        <a href="/connectors"><b>Connectors</b></a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h1>Connectors</h1>
+      <div class="sub">Camada de evidência externa para consolidar risco por ativo e microserviço.</div>
+    </div>
+
+    <div class="action-bar">
+      <form method="post" action="/connectors/securityhub/mock-sync">
+        <button type="submit">Rodar mock sync do Security Hub</button>
+      </form>
+      <a href="/" class="small">← Voltar</a>
+    </div>
+
+    <div class="connector-grid">
+      {% for kind, src in dash.sources.items() %}
+      <div class="connector-card">
+        <div class="section-title">
+          <h2>{{src.name}}</h2>
+          <div class="small">{{kind}}</div>
+        </div>
+        <div style="margin-top:8px">
+          <span class="badge {{ 'Baixo' if src.enabled else 'Alto' }}"><span class="dot"></span>{{ 'enabled' if src.enabled else 'disabled' }}</span>
+        </div>
+        <div style="margin-top:12px">
+          <div class="statline"><span class="small">Assets</span><b>{{src.assets}}</b></div>
+          <div class="statline"><span class="small">Findings</span><b>{{src.findings}}</b></div>
+          <div class="statline"><span class="small">Tickets</span><b>{{src.tickets}}</b></div>
+          <div class="statline"><span class="small">Last sync</span><b>{{src.last_sync_at or 'never'}}</b></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="section-title">
+        <h2>Top microserviços por findings externos</h2>
+        <div class="small">Mock consolidado</div>
+      </div>
+      <table style="margin-top:10px">
+        <thead>
+          <tr><th>Microserviço</th><th>Total</th><th>Critical</th><th>High</th><th>Medium</th><th>Low</th></tr>
+        </thead>
+        <tbody>
+          {% for r in top_rows %}
+          <tr>
+            <td><a href="/service/{{r.service_id}}">{{r.service_name}}</a></td>
+            <td>{{r.total}}</td>
+            <td>{{r.critical}}</td>
+            <td>{{r.high}}</td>
+            <td>{{r.medium}}</td>
+            <td>{{r.low}}</td>
+          </tr>
+          {% endfor %}
+          {% if top_rows|length == 0 %}
+          <tr><td colspan="6" class="small">Sem dados ainda. Rode o mock sync do Security Hub.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <hr/>
+    <div class="small">v13: foundation para conectores + mock funcional de AWS Security Hub.</div>
+  </div>
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+</body>
+</html>

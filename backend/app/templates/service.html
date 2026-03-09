@@ -1,0 +1,233 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>ArchGuard • {{service.name}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+
+    <div class="app-header">
+      <a class="app-brand" href="/">
+        <img src="/static/archguard_logo.svg" alt="ArchGuard"/>
+        <div>
+          <div class="title">ArchGuard</div>
+          <div class="tag">Security Architecture Intelligence</div>
+        </div>
+      </a>
+      <div class="small-nav">
+        <a href="/">Dashboard</a>
+        <a href="/connectors">Connectors</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h1>{{service.name}}</h1>
+      <div class="sub">Blueprint v{{blueprint_version}} • {{service.platform}} • {{service.environment}}</div>
+    </div>
+
+    <div class="action-bar">
+      <form method="post" action="/service/{{service.id}}/evaluate">
+        <button type="submit">Rodar avaliação (farol)</button>
+      </form>
+      <a href="/service/{{service.id}}/interview"><button type="button">Iniciar entrevista</button></a>
+      <form method="post" action="/service/{{service.id}}/interview/reset">
+        <button type="submit" class="btn-ghost">Resetar entrevista</button>
+      </form>
+      <a href="/" class="small">← Voltar</a>
+    </div>
+
+    <div class="page-wrap">
+      <div class="service-grid">
+        <div class="card">
+          <div class="section-title">
+            <h2>Metadados</h2>
+            <div class="small">Serviço</div>
+          </div>
+
+          <div class="small" style="margin-top:8px">
+            Owner: <b>{{service.owner_team}}</b> • Domínio: <b>{{service.domain}}</b><br/>
+            Criticidade: <b>{{service.criticality}}</b> • Exposição: <b>{{service.exposure}}</b> • Dados: <b>{{service.data_classification}}</b>
+          </div>
+
+          <div style="margin-top:14px">
+            <div class="small">Farol</div>
+            {% if evaluation %}
+              <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px">
+                {% if evaluation.traffic_light == 'red' %}
+                <span class="badge red"><span class="dot"></span>Alto</span>
+              {% elif evaluation.traffic_light == 'yellow' %}
+                <span class="badge yellow"><span class="dot"></span>Médio</span>
+              {% elif evaluation.traffic_light == 'green' %}
+                <span class="badge green"><span class="dot"></span>Baixo</span>
+              {% else %}
+                <span class="badge unknown"><span class="dot"></span>Desconhecido</span>
+              {% endif %}
+                <span class="small">overall: <b>{{evaluation.score.overall}}</b> • ruleset={{evaluation.ruleset}}</span>
+              </div>
+            {% else %}
+              <div class="small" style="margin-top:8px">Sem avaliação ainda. Clique em <b>Rodar avaliação</b>.</div>
+            {% endif %}
+          </div>
+
+          {% if evaluation and evaluation.blockers and evaluation.blockers|length > 0 %}
+            <div style="margin-top:16px">
+              <div class="small"><b>Blockers</b></div>
+              <ul class="info-list small" style="margin-top:8px">
+                {% for b in evaluation.blockers[:6] %}
+                  <li><b>{{b.rule_id}}</b> — {{b.title}}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Blueprint atual</h2>
+            <div class="small">JSON</div>
+          </div>
+          <pre class="codebox"><code>{{ blueprint | tojson(indent=2) }}</code></pre>
+        </div>
+      </div>
+
+      {% if service_tech %}
+      <div class="tech-grid">
+        <div class="card">
+          <div class="section-title">
+            <h2>Score técnico por domínio</h2>
+            <div class="small">Visão do microserviço</div>
+          </div>
+
+          <div class="domain-bars">
+            {% for d in service_tech.domains %}
+              {% set val = d.value if d.value is not none else 0 %}
+              {% if val >= 80 %}
+                {% set color = 'var(--Baixo)' %}
+              {% elif val >= 60 %}
+                {% set color = 'var(--Médio)' %}
+              {% else %}
+                {% set color = 'var(--Alto)' %}
+              {% endif %}
+              <div class="domain-bar-row">
+                <div class="small">{{d.label}}</div>
+                <div class="domain-bar">
+                  <div class="domain-bar-fill" style="width: {{val}}%; background: {{color}};"></div>
+                </div>
+                <div><b>{{d.value if d.value is not none else '—'}}</b></div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">
+            <h2>Risk view do microserviço</h2>
+            <div class="small">Técnico</div>
+          </div>
+
+          <div class="service-risk-box">
+            <div class="risk-tile">
+              <div class="small">Criticality</div>
+              <div><b>{{service_tech.risk_view.criticality}}</b></div>
+            </div>
+            <div class="risk-tile">
+              <div class="small">Exposure</div>
+              <div><b>{{service_tech.risk_view.exposure}}</b></div>
+            </div>
+            <div class="risk-tile">
+              <div class="small">Traffic</div>
+              <div>
+                {% if service_tech.risk_view.traffic == 'red' %}
+                <span class="badge red"><span class="dot"></span>Alto</span>
+              {% elif service_tech.risk_view.traffic == 'yellow' %}
+                <span class="badge yellow"><span class="dot"></span>Médio</span>
+              {% elif service_tech.risk_view.traffic == 'green' %}
+                <span class="badge green"><span class="dot"></span>Baixo</span>
+              {% else %}
+                <span class="badge unknown"><span class="dot"></span>Desconhecido</span>
+              {% endif %}
+              </div>
+            </div>
+            <div class="risk-tile">
+              <div class="small">Overall</div>
+              <div><b>{{service_tech.risk_view.overall}}</b></div>
+            </div>
+          </div>
+
+          <div class="small" style="margin-top:12px">
+            Leitura rápida: combine <b>criticality</b> + <b>exposure</b> + <b>farol</b> para priorização técnica.
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if evaluation and evaluation.findings and evaluation.findings|length > 0 %}
+      <div class="card" style="margin-top:16px">
+        <div class="section-title">
+          <h2>Principais findings</h2>
+          <div class="small">Última avaliação</div>
+        </div>
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Regra</th><th>Sev</th><th>Título</th><th>Dimensão</th></tr>
+          </thead>
+          <tbody>
+            {% for f in evaluation.findings[:10] %}
+              <tr>
+                <td><span class="small">{{f.rule_id}}</span></td>
+                <td>{{f.severity}}</td>
+                <td class="small">{{f.title}}</td>
+                <td class="small">{{f.dimension}}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+
+
+      {% if external_findings and external_findings|length > 0 %}
+      <div class="card" style="margin-top:16px">
+        <div class="section-title">
+          <h2>Findings externos</h2>
+          <div class="small">Mock Security Hub / futura camada de evidência</div>
+        </div>
+        <table style="margin-top:10px">
+          <thead>
+            <tr><th>Sev</th><th>Título</th><th>Provider</th><th>Status</th><th>Resource</th></tr>
+          </thead>
+          <tbody>
+            {% for f in external_findings[:10] %}
+            <tr>
+              <td>{{f.severity}}</td>
+              <td class="small">{{f.title}}</td>
+              <td class="small">{{f.provider}}</td>
+              <td class="small">{{f.status}}</td>
+              <td class="small">{{f.resource_type or '—'}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+    <hr/>
+    <div class="small"></div>
+
+  </div>
+
+<hr/>
+<div class="small" style="text-align:center;margin-top:20px">
+ArchGuard v1.0 • Desenvolvido por 
+<a href="https://www.linkedin.com/in/fernando-norberto-39842b22/" target="_blank">
+Fernando Norberto
+</a> com ajuda da OpenAI
+</div>
+
+</body>
+</html>
